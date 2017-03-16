@@ -13,7 +13,8 @@ var laser2;
 var cursors;
 var fireButton;
 var lasers;
-var laserTime = 0;
+var fireRate = 0;
+var Weapon;
 
 function create() {
     // start physics engine
@@ -23,7 +24,7 @@ function create() {
     starfield = game.add.tileSprite(0, 0, 1024, 1024, 'starfield');
 
     // load playerShip
-    player = game.add.sprite(640, 512, 'playerShip');
+    player = game.add.sprite(512, 512, 'playerShip');
     player.scale.setTo(2.0, 2.0);
     player.anchor.setTo(0.5);
     // enable physics on player
@@ -31,7 +32,7 @@ function create() {
     // keep player inbounds
     player.body.collideWorldBounds = true;
 
-    // our laser group
+    //our laser group
     lasers = game.add.group();
     lasers.enableBody = true;
     lasers.physicsBodyType = Phaser.Physics.ARCADE;
@@ -40,7 +41,6 @@ function create() {
     lasers.setAll('anchor.y', 1);
     lasers.setAll('checkWorldBounds', true);
     lasers.setAll('outOfBoundsKill', true);
-
 
 }
 
@@ -73,45 +73,27 @@ function update() {
 
     // enable shooting
     if (fireButton.isDown) {
-        fire();
+        fire(player.x - 15, true);
+        fire(player.x + 15, false);
     }
 
-    function fire() {
-        if (game.time.now > laserTime) {
+    function fire(x, double) {
+        if (game.time.now > fireRate) {
 
-            laser1 = lasers.getFirstExists(false);
-            laser2 = lasers.getFirstExists(false);
+            laser = lasers.getFirstExists(false);
 
-            if (laser1 && laser2) {
-                // fire left gun
-                laser1.reset(player.x - 15, player.y + 8);
-                console.log('firing laser one');
-                laser1.body.velocity.y = -400;
-                // fire right gun
-                laser2.reset(player.x + 15, player.y + 8);
-                console.log('firing laser two');
-                laser2.body.velocity.y = -400;
-                laserTime = game.time.now + 200;
+            if (laser) {
+                laser.reset(x, player.y - 10);
+                laser.body.velocity.y = -500;
+                if (double) {
+                    fireRate = 0;
+                } else {
+                    fireRate = game.time.now + 200;
+                }
 
             }
         }
 
     }
 
-    // // mouse movement
-    // if (game.input.mousePointer.isDown)
-    // {
-    //     //  250 is the speed it will move towards the mouse
-    //     game.physics.arcade.moveToPointer(player, 250);
-
-    //     //  if it's overlapping the mouse, don't move any more
-    //     if (Phaser.Rectangle.contains(player.body, game.input.x, game.input.y))
-    //     {
-    //         player.body.velocity.setTo(0, 0);
-    //     }
-    // }
-    // else
-    // {
-    //     player.body.velocity.setTo(0, 0);
-    // }
 }
