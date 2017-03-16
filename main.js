@@ -2,7 +2,7 @@ var game = new Phaser.Game(1024, 1024, Phaser.AUTO, '', { preload: preload, crea
 
 function preload() {
     game.load.image('starfield', 'art/background/skybox.jpg');
-    game.load.image('playerShip', 'art/ships/spaceship4.png');
+    game.load.image('playerShip', 'art/ships/Spaceship4.png');
     game.load.image('laser', 'art/fx/laser-green.png');
 }
 
