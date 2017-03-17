@@ -4,7 +4,7 @@ function preload() {
     game.load.image('starfield', 'art/background/skybox.jpg');
     game.load.image('playerShip', 'art/ships/Spaceship4.png');
     game.load.image('laser', 'art/fx/laser-green.png');
-    game.load.image('enemy', 'art/ships/Spaceship1.png');
+    game.load.image('enemy', 'art/ships/Spaceship3.png');
     game.load.spritesheet('explosion', 'art/fx/explosion-01.png', 64, 64, 14);
 }
 
