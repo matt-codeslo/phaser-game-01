@@ -5,17 +5,17 @@ function preload() {
     game.load.image('playerShip', 'art/ships/Spaceship4.png');
     game.load.image('laser', 'art/fx/laser-green.png');
     game.load.image('enemy', 'art/ships/Spaceship1.png');
+    game.load.spritesheet('explosion', 'art/fx/explosion-01.png', 64, 64, 14);
 }
 
 var player;
+var enemies;
 var background;
-var laser1;
-var laser2;
 var cursors;
 var fireButton;
 var lasers;
 var fireRate = 0;
-var Weapon;
+var explosions;
 
 function create() {
     // start physics engine
@@ -33,13 +33,17 @@ function create() {
     // keep player inbounds
     player.body.collideWorldBounds = true;
 
-    // add enemy ship
-    enemy = game.add.sprite(512, 100, 'enemy');
-    enemy.scale.setTo(2.0, 2.0);
-    enemy.anchor.setTo(0.5);
-    // enable physics on enemy
-    game.physics.enable(enemy, Phaser.Physics.ARCADE);
-    enemy.angle = 180;
+    // mor enemies
+    enemies = game.add.group();
+    enemies.enableBody = true;
+    enemies.physicsBodyType = Phaser.Physics.ARCADE;
+    enemies.createMultiple(10, 'enemy');
+    enemies.setAll('anchor.x', 0.5);
+    enemies.setAll('anchor.y', 0.5);
+    enemies.setAll('scale.x', 2.0);
+    enemies.setAll('scale.y', 2.0);
+    enemies.setAll('angle', 180);
+
 
     //our laser group
     lasers = game.add.group();
@@ -51,6 +55,27 @@ function create() {
     lasers.setAll('checkWorldBounds', true);
     lasers.setAll('outOfBoundsKill', true);
 
+    //explosions!
+    explosions = game.add.group();
+    explosions.enableBody = true;
+    explosions.physicsBodyType = Phaser.Physics.ARCADE;
+    explosions.createMultiple(30, 'explosion');
+    explosions.setAll('anchor.x', 0.5);
+    explosions.setAll('anchor.y', 0.5);
+    explosions.forEach(function (explosion) {
+        explosion.animations.add('explosion');
+    });
+
+    function spawnEnemy(x, y) {
+        console.log('spawning');
+        var enemy = enemies.getFirstExists(false);
+        if (enemy) {
+            enemy.reset(x, y);
+        }
+    }
+    for (var i = 325; i < 825; i += 100) {
+        spawnEnemy(i, 100);
+    }
 }
 
 function update() {
@@ -87,11 +112,19 @@ function update() {
     }
 
     // lasers should collide with enemies. Only lasers that hit enemy should be destroyed.
-    game.physics.arcade.collide(enemy, lasers, function(enemy,laser){collideScript(enemy,laser);});
+    game.physics.arcade.collide(enemies, lasers, function (enemy, laser) { enemyExplodes(enemy, laser); });
 
     // custom collide collideScript
-    function collideScript(enemy,laser){
+    function enemyExplodes(enemy, laser) {
         laser.kill();
+        enemy.body.velocity.y = 0;
+        var explosion = explosions.getFirstExists(false);
+        explosion.reset(enemy.body.x + enemy.body.halfWidth, enemy.body.y + enemy.body.halfHeight);
+        explosion.body.velocity.y = enemy.body.velocity.y;
+        explosion.play('explosion', 30, false, true); // name, 30fps, don't loop, kill when done
+        enemy.kill();
+
+
     }
 
     function fire(x, double) {
@@ -113,4 +146,7 @@ function update() {
 
     }
 
+
+
 }
+
