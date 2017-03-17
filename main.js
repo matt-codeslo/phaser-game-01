@@ -4,6 +4,7 @@ function preload() {
     game.load.image('starfield', 'art/background/skybox.jpg');
     game.load.image('playerShip', 'art/ships/Spaceship4.png');
     game.load.image('laser', 'art/fx/laser-green.png');
+    game.load.image('enemy', 'art/ships/Spaceship1.png');
 }
 
 var player;
@@ -31,6 +32,14 @@ function create() {
     game.physics.enable(player, Phaser.Physics.ARCADE);
     // keep player inbounds
     player.body.collideWorldBounds = true;
+
+    // add enemy ship
+    enemy = game.add.sprite(512, 100, 'enemy');
+    enemy.scale.setTo(2.0, 2.0);
+    enemy.anchor.setTo(0.5);
+    // enable physics on enemy
+    game.physics.enable(enemy, Phaser.Physics.ARCADE);
+    enemy.angle = 180;
 
     //our laser group
     lasers = game.add.group();
@@ -75,6 +84,14 @@ function update() {
     if (fireButton.isDown) {
         fire(player.x - 15, true);
         fire(player.x + 15, false);
+    }
+
+    // lasers should collide with enemies. Only lasers that hit enemy should be destroyed.
+    game.physics.arcade.collide(enemy, lasers, function(enemy,laser){collideScript(enemy,laser);});
+
+    // custom collide collideScript
+    function collideScript(enemy,laser){
+        laser.kill();
     }
 
     function fire(x, double) {
