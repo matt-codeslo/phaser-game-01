@@ -14,8 +14,11 @@ var background;
 var cursors;
 var fireButton;
 var lasers;
+var laserSpeed = 550;
 var fireRate = 0;
 var explosions;
+var playerSpeed = 350;
+var enemySpeed = 250;
 
 function create() {
     // start physics engine
@@ -70,20 +73,21 @@ function create() {
     function spawnEnemy(numOfEnemies) {
         if (numOfEnemies > 0) {
             var randTime = getRandom(1000, 1500);
-            console.log(randTime);
             var x = game.rnd.integerInRange(50, game.width - 50);
             var y = -100;
-            var sendEnemies = new Promise(function (resolve, reject) {
+            // a promise that handles enemy spawning
+            var sendEnemies = new Promise(function (resolve) {
                 var enemy = enemies.getFirstExists(false);
                 if (enemy) {
                     enemy.reset(x, y);
                     enemy.checkWorldBounds = true; // without this can't check if sprite is in bounds
                     enemy.events.onOutOfBounds.add(hasLeftBottom, this); // this adds a custom callback
-                    enemy.body.velocity.y = 250;
+                    enemy.body.velocity.y = enemySpeed;
                 }
-                resolve(1);
+                resolve(1); // seals the promise
             });
 
+            // calls the promise and sets a success result.
             sendEnemies.then(function (result) {
                 setTimeout(function () {
                     spawnEnemy(numOfEnemies - 1);
@@ -121,15 +125,15 @@ function update() {
 
     // enable movement
     if (cursors.left.isDown) {
-        player.body.velocity.x = -250;
+        player.body.velocity.x = playerSpeed *-1;
 
         // todo: animations would be good
     } else if (cursors.right.isDown) {
-        player.body.velocity.x = 250;
+        player.body.velocity.x = playerSpeed;
     } else if (cursors.up.isDown) {
-        player.body.velocity.y = -250;
+        player.body.velocity.y = playerSpeed *-1;
     } else if (cursors.down.isDown) {
-        player.body.velocity.y = 250;
+        player.body.velocity.y = playerSpeed;
     }
     else {
         // stop moving
@@ -162,7 +166,7 @@ function update() {
 
             if (laser) {
                 laser.reset(x, player.y + 10);
-                laser.body.velocity.y = -500;
+                laser.body.velocity.y = laserSpeed * -1;
                 if (double) {
                     fireRate = 0;
                 } else {
