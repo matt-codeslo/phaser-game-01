@@ -66,16 +66,46 @@ function create() {
         explosion.animations.add('explosion');
     });
 
-    function spawnEnemy(x, y) {
-        console.log('spawning');
-        var enemy = enemies.getFirstExists(false);
-        if (enemy) {
-            enemy.reset(x, y);
+    // create enemies
+    function spawnEnemy(numOfEnemies) {
+        if (numOfEnemies > 0) {
+            var randTime = getRandom(1000, 1500);
+            console.log(randTime);
+            var x = game.rnd.integerInRange(50, game.width - 50);
+            var y = -100;
+            var sendEnemies = new Promise(function (resolve, reject) {
+                var enemy = enemies.getFirstExists(false);
+                if (enemy) {
+                    enemy.reset(x, y);
+                    enemy.checkWorldBounds = true; // without this can't check if sprite is in bounds
+                    enemy.events.onOutOfBounds.add(hasLeftBottom, this); // this adds a custom callback
+                    enemy.body.velocity.y = 250;
+                }
+                resolve(1);
+            });
+
+            sendEnemies.then(function (result) {
+                setTimeout(function () {
+                    spawnEnemy(numOfEnemies - 1);
+                }, randTime);
+            });
+
+        }
+
+    }
+    // kill enemies if they leave bottom of screen
+    function hasLeftBottom(enemy) {
+        if (enemy.body.y > game.height) {
+            enemy.kill();
         }
     }
-    for (var i = 325; i < 825; i += 100) {
-        spawnEnemy(i, 100);
+
+    function getRandom(min, max) {
+        return randTime = game.rnd.integerInRange(min, max);
     }
+
+    // generate those enemies
+    spawnEnemy(10);
 }
 
 function update() {
@@ -123,8 +153,6 @@ function update() {
         explosion.body.velocity.y = enemy.body.velocity.y;
         explosion.play('explosion', 30, false, true); // name, 30fps, don't loop, kill when done
         enemy.kill();
-
-
     }
 
     function fire(x, double) {
@@ -133,7 +161,7 @@ function update() {
             laser = lasers.getFirstExists(false);
 
             if (laser) {
-                laser.reset(x, player.y - 10);
+                laser.reset(x, player.y + 10);
                 laser.body.velocity.y = -500;
                 if (double) {
                     fireRate = 0;
@@ -145,6 +173,8 @@ function update() {
         }
 
     }
+
+
 
 
 
