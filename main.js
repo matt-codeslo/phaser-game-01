@@ -8,9 +8,8 @@ function preload() {
     game.load.spritesheet('explosion', 'art/fx/explosion-01.png', 64, 64, 14);
 }
 
-var points = { "x": [0,200,400,600,800], "y": [0,400,800,400,0] };
-var path = [];
-
+var points1 = { "x": [0,200,400,600,800,1000], "y": [0,400,800,400,50,100] };
+var points2 = {"x":[1000,800,600,400,200,0], "y":[0,400,800,400,50,100]};
 var player;
 var enemies;
 var background;
@@ -28,19 +27,17 @@ var increment = 2.5;
 function create() {
 
 
-    function plot() {
+    function plot(points) {
+        var path = [];
         var x = increment / game.width;
         for (var i = 0; i <= 1; i += x) {
             var px = game.math.catmullRomInterpolation(points.x, i);
             var py = game.math.catmullRomInterpolation(points.y, i);
             path.push({ x: px, y: py });
-
         }
+
+        return path;
     }
-
-    // create path with plot function
-
-    plot();
     // start physics engine
     game.physics.startSystem(Phaser.Physics.ARCADE);
 
@@ -67,6 +64,7 @@ function create() {
     enemies.setAll('scale.y', 2.0);
     enemies.setAll('angle', 180);
     enemies.setAll('pathPosition', 1); // this is a custom value for motion path
+    enemies.setAll('path',[]);
 
 
     //our laser group
@@ -91,21 +89,20 @@ function create() {
     });
 
     // create enemies
-    function spawnEnemy(numOfEnemies) {
+    function spawnEnemy(numOfEnemies,points) {
         if (numOfEnemies > 0) {
-            var randTime = getRandom(1000, 1500);
-            // var x = game.rnd.integerInRange(50, game.width - 50);
-            // var y = -100;
-            var x = path[0].x;
-            var y = path[0].y;
             // a promise that handles enemy spawning
             var sendEnemies = new Promise(function (resolve) {
                 var enemy = enemies.getFirstExists(false);
                 if (enemy) {
-                    enemy.reset(x, y);
                     enemy.checkWorldBounds = true; // without this can't check if sprite is in bounds
                     enemy.events.onOutOfBounds.add(hasLeftBottom, this); // this adds a custom callback
-                    enemy.pathPosition = 0;
+                    enemy.points = points; // stores a series of xy coordinates
+                    enemy.path = plot(points); // stores a motion path
+                    enemy.pathPosition = 0; // tracks what index value of path enemy is referencing
+                    var x = enemy.path[0].x;
+                    var y = enemy.path[0].y;
+                    enemy.reset(x, y);
                 }
                 resolve(1);
             });
@@ -113,8 +110,8 @@ function create() {
             // calls the promise and sets a success result.
             sendEnemies.then(function (result) {
                 setTimeout(function () {
-                    spawnEnemy(numOfEnemies - 1);
-                }, randTime);
+                    spawnEnemy(numOfEnemies - 1,points);
+                }, 1000);
             });
 
         }
@@ -134,13 +131,15 @@ function create() {
 
 
     // generate those enemies
-    spawnEnemy(10);
+    spawnEnemy(5,points1);
+    spawnEnemy(5,points2);
 
 
 } // end create function
 
 function update() {
     enemies.children.forEach(function (enemy) {
+        var path = enemy.path;
         if(path[enemy.pathPosition]){
         game.physics.arcade.moveToXY(
             enemy,
