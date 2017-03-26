@@ -8,8 +8,8 @@ function preload() {
     game.load.spritesheet('explosion', 'art/fx/explosion-01.png', 64, 64, 14);
 }
 
-var points1 = { "x": [0,200,400,600,800,1000], "y": [0,400,800,400,50,100] };
-var points2 = {"x":[1000,800,600,400,200,0], "y":[0,400,800,400,50,100]};
+var points1 = { "x": [0, 200, 400, 600, 800, 1000], "y": [0, 400, 800, 400, 50, 100] };
+var points2 = { "x": [1000, 800, 600, 400, 200, 0], "y": [0, 400, 800, 400, 50, 100] };
 var player;
 var enemies;
 var background;
@@ -29,13 +29,20 @@ function create() {
 
     function plot(points) {
         var path = [];
+        var ix = 0;
         var x = increment / game.width;
         for (var i = 0; i <= 1; i += x) {
             var px = game.math.catmullRomInterpolation(points.x, i);
             var py = game.math.catmullRomInterpolation(points.y, i);
-            path.push({ x: px, y: py });
-        }
+            var node = {x:px, y:py, angle:0};
+            if (ix > 0) {
+                node.angle = game.math.angleBetweenPoints(path[ix - 1], node);
+            } 
 
+            path.push(node);
+
+            ix++;
+        }
         return path;
     }
     // start physics engine
@@ -62,9 +69,9 @@ function create() {
     enemies.setAll('anchor.y', 0.5);
     enemies.setAll('scale.x', 2.0);
     enemies.setAll('scale.y', 2.0);
-    enemies.setAll('angle', 180);
-    enemies.setAll('pathPosition', 1); // this is a custom value for motion path
-    enemies.setAll('path',[]);
+    // enemies.setAll('angle', 180);
+    enemies.setAll('pathPosition', 0); // this is a custom value for motion path
+    enemies.setAll('path', []);
 
 
     //our laser group
@@ -89,7 +96,7 @@ function create() {
     });
 
     // create enemies
-    function spawnEnemy(numOfEnemies,points) {
+    function spawnEnemy(numOfEnemies, points) {
         if (numOfEnemies > 0) {
             // a promise that handles enemy spawning
             var sendEnemies = new Promise(function (resolve) {
@@ -110,7 +117,7 @@ function create() {
             // calls the promise and sets a success result.
             sendEnemies.then(function (result) {
                 setTimeout(function () {
-                    spawnEnemy(numOfEnemies - 1,points);
+                    spawnEnemy(numOfEnemies - 1, points);
                 }, 1000);
             });
 
@@ -131,8 +138,8 @@ function create() {
 
 
     // generate those enemies
-    spawnEnemy(5,points1);
-    spawnEnemy(5,points2);
+    spawnEnemy(5, points1);
+    spawnEnemy(5, points2);
 
 
 } // end create function
@@ -140,21 +147,23 @@ function create() {
 function update() {
     enemies.children.forEach(function (enemy) {
         var path = enemy.path;
-        if(path[enemy.pathPosition]){
-        game.physics.arcade.moveToXY(
-            enemy,
-            path[enemy.pathPosition].x,
-            path[enemy.pathPosition].y,
-            250,
-            500
-        );
-         enemy.pathPosition++;
-    }
-    else{
-        enemy.body.velocity.x = 0;
-        enemy.body.velocity.y = 300;
+        if (path[enemy.pathPosition]) {
+            enemy.rotation = (path[enemy.pathPosition].angle) *-1;
+            game.physics.arcade.moveToXY(
+                enemy,
+                path[enemy.pathPosition].x,
+                path[enemy.pathPosition].y,
+                250,
+                500
+            );
+            enemy.pathPosition++;
+        }
+        else {
+            enemy.angle = 0;
+            enemy.body.velocity.x = 0;
+            enemy.body.velocity.y = 300;
 
-    }
+        }
     });
 
 
